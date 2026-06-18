@@ -2,6 +2,7 @@ node_modules/
 dist/
 .pnpm-store/
 src-tauri/target/
-src-tauri/gen/android/.gradle/
-src-tauri/gen/android/build/
-src-tauri/gen/android/app/build/
+# Android project is generated at build time via `tauri android init`.
+# Custom Android code (PlaybackService/Plugin, media3 deps) lives in
+# src-tauri/android-overlay/ and is applied over the generated project.
+src-tauri/gen/android/

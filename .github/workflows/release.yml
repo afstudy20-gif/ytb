@@ -63,6 +63,24 @@ jobs:
         working-directory: wt-1-tauri-shell
         run: pnpm install --frozen-lockfile
 
+      - name: Init Android project
+        working-directory: wt-1-tauri-shell
+        run: pnpm tauri android init
+
+      - name: Apply Android overlay (PlaybackService + media3 deps)
+        run: |
+          overlay=wt-1-tauri-shell/src-tauri/android-overlay/app
+          gen=wt-1-tauri-shell/src-tauri/gen/android/app
+          # Restore custom Kotlin sources (PlaybackService/PlaybackPlugin)
+          cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackService.kt" \
+             "$gen/src/main/kotlin/com/afstudy20/ytb/PlaybackService.kt"
+          cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackPlugin.kt" \
+             "$gen/src/main/kotlin/com/afstudy20/ytb/PlaybackPlugin.kt"
+          # Custom manifest (PlaybackService + foreground permissions) overrides the generated one
+          cp "$overlay/src/main/AndroidManifest.xml" "$gen/src/main/AndroidManifest.xml"
+          # build.gradle.kts with media3/kotlinx dependencies overrides the generated one
+          cp "$overlay/build.gradle.kts" "$gen/build.gradle.kts"
+
       - name: Build Android (release)
         working-directory: wt-1-tauri-shell
         env:
