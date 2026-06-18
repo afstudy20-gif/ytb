@@ -96,12 +96,12 @@ jobs:
           cp "$overlay/src/main/AndroidManifest.xml" "$gen/src/main/AndroidManifest.xml"
 
           # Write signing credentials for the release signing config.
-          cat > wt-1-tauri-shell/src-tauri/gen/android/keystore.properties <<'EOF'
-keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-keyPassword=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
-storePassword=${{ secrets.ANDROID_KEY_PASSWORD }}
-storeFile=${{ github.workspace }}/.keys/release.keystore
-EOF
+          {
+            echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}"
+            echo "keyPassword=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}"
+            echo "storePassword=${{ secrets.ANDROID_KEY_PASSWORD }}"
+            echo "storeFile=${{ github.workspace }}/.keys/release.keystore"
+          } > wt-1-tauri-shell/src-tauri/gen/android/keystore.properties
 
       - name: Build Android (release)
         working-directory: wt-1-tauri-shell
