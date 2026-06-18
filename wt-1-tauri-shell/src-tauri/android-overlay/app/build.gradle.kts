@@ -15,14 +15,34 @@ android {
         versionName = "0.1.0"
     }
 
+    // Tauri builds per-ABI APKs plus a "universal" variant; without these
+    // flavors `tauri android build` fails with "Task 'assembleUniversalRelease'
+    // not found".
+    flavorDimensions += "abi"
+    productFlavors {
+        create("armv7") {
+            dimension = "abi"
+            ndk { abiFilters += "armeabi-v7a" }
+        }
+        create("arm64") {
+            dimension = "abi"
+            ndk { abiFilters += "arm64-v8a" }
+        }
+        create("x86_64") {
+            dimension = "abi"
+            ndk { abiFilters += "x86_64" }
+        }
+        create("universal") {
+            dimension = "abi"
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
         }
         getByName("release") {
             isMinifyEnabled = false
-            // Tauri injects the signing config via TAURI_ANDROID_* env vars /
-            // the generated gradle config; keep it minimal here.
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
