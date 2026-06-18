@@ -1,0 +1,91 @@
+{
+  "kind": "youtube#searchListResponse",
+  "estimatedResults": "1234567",
+  "contents": {
+    "twoColumnSearchResultsRenderer": {
+      "primaryContents": {
+        "sectionListRenderer": {
+          "contents": [
+            {
+              "itemSectionRenderer": {
+                "contents": [
+                  {
+                    "videoRenderer": {
+                      "videoId": "jfKfPfyJRdk",
+                      "thumbnail": {
+                        "thumbnails": [
+                          {"url": "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg", "width": 360, "height": 202}
+                        ]
+                      },
+                      "title": {
+                        "runs": [{"text": "lofi hip hop radio - beats to relax/study to"}]
+                      },
+                      "longBylineText": {
+                        "runs": [
+                          {
+                            "text": "Lofi Girl",
+                            "navigationEndpoint": {
+                              "browseEndpoint": {"browseId": "UCLkYhRoVJpobI7RgsiOoZ8w"}
+                            }
+                          }
+                        ]
+                      },
+                      "lengthText": {"accessibility": {"accessibilityData": {"label": "2 hours"}}},
+                      "viewCountText": {"runs": [{"text": "1234"}, {"text": " watching"}]},
+                      "publishedTimeText": {"simpleText": "Streamed live"},
+                      "badges": [{"metadataBadgeRenderer": {"label": "LIVE", "style": "BADGE_STYLE_TYPE_LIVE_NOW"}}],
+                      "detailedMetadataAccesspoints": {"runs": [{"text": "cozy beats"}]}
+                    }
+                  },
+                  {
+                    "videoRenderer": {
+                      "videoId": "5qap5aO4i9A",
+                      "thumbnail": {"thumbnails": [{"url": "https://i.ytimg.com/vi/5qap5aO4i9A/hqdefault.jpg"}]},
+                      "title": {"simpleText": "lofi for sleep"},
+                      "shortBylineText": {
+                        "runs": [
+                          {
+                            "text": "Sleepy",
+                            "navigationEndpoint": {"browseEndpoint": {"browseId": "UCsleepy"}}
+                          }
+                        ]
+                      },
+                      "lengthText": {"simpleText": "8:00:00"},
+                      "viewCountText": {"simpleText": "5,678,901 views"},
+                      "publishedTimeText": {"simpleText": "1 year ago"}
+                    }
+                  },
+                  {
+                    "channelRenderer": {
+                      "channelId": "UCLkYhRoVJpobI7RgsiOoZ8w",
+                      "title": {"simpleText": "Lofi Girl"},
+                      "thumbnail": {"thumbnails": [{"url": "https://i.ytimg.com/channel/avatar.jpg"}]},
+                      "subscriberCountText": {"simpleText": "12.4M subscribers"},
+                      "descriptionSnippet": {"runs": [{"text": "cozy beats 24/7"}]}
+                    }
+                  },
+                  {
+                    "playlistRenderer": {
+                      "playlistId": "PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf",
+                      "title": {"simpleText": "Lofi Essentials"},
+                      "thumbnails": [{"thumbnails": [{"url": "https://i.ytimg.com/vi/x/hqdefault.jpg"}]}],
+                      "shortBylineText": {"runs": [{"text": "Curator"}]},
+                      "videoCount": "42"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "continuationItemRenderer": {
+                "continuationEndpoint": {
+                  "continuationCommand": {"token": "XYZ_NEXT_PAGE_TOKEN"}
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

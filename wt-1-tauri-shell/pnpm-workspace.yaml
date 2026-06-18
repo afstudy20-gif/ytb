@@ -1,0 +1,14 @@
+allowBuilds:
+  esbuild: set this to true or false
+settings:
+  minimumReleaseAge: 0
+  minimumReleaseAgeStrict: false
+  trustPolicy: off
+  verifyDepsBeforeRun: false
+  supportedArchitectures:
+    os:
+      - darwin
+    cpu:
+      - arm64
+    libc:
+      - current

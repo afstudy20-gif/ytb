@@ -1,0 +1,13 @@
+[
+  {
+    "UUID": "direct-uuid-1",
+    "videoID": "dQw4w9WgXcQ",
+    "start": 12.0,
+    "end": 22.0,
+    "category": "sponsor",
+    "actionType": "skip",
+    "videoDuration": 212.0,
+    "locked": 1,
+    "votes": 99
+  }
+]

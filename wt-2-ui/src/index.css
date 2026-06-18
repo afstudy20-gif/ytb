@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: 255 255 255;
+  --color-surface: 245 245 245;
+  --color-surface-hover: 235 235 235;
+  --color-text: 15 15 15;
+  --color-subtext: 82 82 82;
+  --color-border: 212 212 212;
+}
+
+.dark {
+  --color-bg: 0 0 0;
+  --color-surface: 15 15 15;
+  --color-surface-hover: 28 28 28;
+  --color-text: 255 255 255;
+  --color-subtext: 170 170 170;
+  --color-border: 38 38 38;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-bg text-text antialiased;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+input[type='range'].scrub {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type='range'].scrub::-webkit-slider-runnable-track {
+  @apply h-1 rounded bg-white/20;
+}
+
+input[type='range'].scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  @apply -mt-1.5 h-4 w-4 rounded-full bg-accent;
+}
+
+input[type='range'].scrub::-moz-range-track {
+  @apply h-1 rounded bg-white/20;
+}
+
+input[type='range'].scrub::-moz-range-thumb {
+  @apply h-4 w-4 rounded-full border-0 bg-accent;
+}

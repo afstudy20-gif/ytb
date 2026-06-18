@@ -1,0 +1,35 @@
+[
+  {
+    "UUID": "seg-uuid-1",
+    "videoID": "dQw4w9WgXcQ",
+    "start": 1.0,
+    "end": 10.0,
+    "category": "sponsor",
+    "actionType": "skip",
+    "videoDuration": 212.0,
+    "locked": 1,
+    "votes": 42
+  },
+  {
+    "UUID": "seg-uuid-2",
+    "videoID": "dQw4w9WgXcQ",
+    "start": 50.0,
+    "end": 60.5,
+    "category": "intro",
+    "actionType": "skip",
+    "videoDuration": 212.0,
+    "locked": 0,
+    "votes": 3
+  },
+  {
+    "UUID": "seg-uuid-3",
+    "videoID": "dQw4w9WgXcR",
+    "start": 5.0,
+    "end": 7.0,
+    "category": "sponsor",
+    "actionType": "skip",
+    "videoDuration": 90.0,
+    "locked": 0,
+    "votes": 0
+  }
+]

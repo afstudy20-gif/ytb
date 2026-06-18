@@ -1,0 +1,40 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Node
+node_modules/
+dist/
+build/
+.pnpm-store/
+*.log
+.env
+.env.local
+
+# Rust
+target/
+Cargo.lock.bak
+**/*.rs.bk
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/build/
+src-tauri/gen/android/local.properties
+src-tauri/gen/android/.idea/
+src-tauri/gen/android/app/release/
+src-tauri/gen/apple/
+
+# Keys / secrets (NEVER commit)
+*.keystore
+*.jks
+.keys/
+key.properties
+
+# Downloads cache
+.downloader.db
+downloads/

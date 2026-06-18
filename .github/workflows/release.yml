@@ -1,0 +1,161 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    name: Android (signed APK + AAB)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: sdkmanager "ndk;26.1.10909125" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Decode keystore
+        run: |
+          mkdir -p ${{ github.workspace }}/.keys
+          echo "${{ secrets.ANDROID_KEY_BASE64 }}" | base64 -d > ${{ github.workspace }}/.keys/release.keystore
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            wt-1-tauri-shell/src-tauri/target
+          key: ${{ runner.os }}-cargo-android-${{ hashFiles('wt-1-tauri-shell/src-tauri/Cargo.lock') }}
+
+      - name: Install frontend
+        working-directory: wt-1-tauri-shell
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Android (release)
+        working-directory: wt-1-tauri-shell
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
+          TAURI_ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/.keys/release.keystore
+          TAURI_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          TAURI_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          TAURI_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
+        run: |
+          pnpm tauri android build --apk --aab
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          find wt-1-tauri-shell/src-tauri/gen/android -type f \( -name '*.apk' -o -name '*.aab' \) -exec cp {} out/ \;
+          ls -la out/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: out/*
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
+          generate_release_notes: true
+
+  desktop:
+    name: Desktop (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            ext: dmg
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            ext: AppImage
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            ext: msi
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Linux deps
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install frontend
+        working-directory: wt-1-tauri-shell
+        run: pnpm install --frozen-lockfile
+
+      - name: Build desktop
+        working-directory: wt-1-tauri-shell
+        run: pnpm tauri build
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p out
+          find wt-1-tauri-shell/src-tauri/target/release/bundle -type f \( -name '*.dmg' -o -name '*.AppImage' -o -name '*.msi' -o -name '*.deb' \) -exec cp {} out/ \; || true
+          ls -la out/ || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: out/*
+          if-no-files-found: warn
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
+          generate_release_notes: true
+          fail_on_unmatched_files: false

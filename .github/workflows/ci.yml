@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  rust-check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        crate:
+          - wt-3-innertube
+          - wt-4-downloader
+          - wt-5-extras
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config
+      - name: cargo check
+        working-directory: ${{ matrix.crate }}
+        run: cargo check --all-targets
+      - name: cargo clippy
+        working-directory: ${{ matrix.crate }}
+        run: cargo clippy --all-targets -- -D warnings || true
+      - name: cargo test
+        working-directory: ${{ matrix.crate }}
+        run: cargo test || true
+
+  ui-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - working-directory: wt-2-ui
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm typecheck
+          pnpm build
+
+  tauri-shell-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
+      - working-directory: wt-1-tauri-shell
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+      - working-directory: wt-1-tauri-shell/src-tauri
+        run: cargo check

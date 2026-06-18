@@ -1,0 +1,58 @@
+{
+  "responseContext": {"visitorData": "abc"},
+  "contents": {
+    "twoColumnWatchNextResults": {
+      "results": {
+        "results": {
+          "contents": [
+            {
+              "videoPrimaryInfoRenderer": {
+                "title": {"simpleText": "Rick Astley - Never Gonna Give You Up (Official Video)"},
+                "viewCount": {"videoViewCountRenderer": {"viewCount": {"simpleText": "1.5B views"}}},
+                "dateText": {"simpleText": "Oct 25, 2009"}
+              }
+            },
+            {
+              "videoSecondaryInfoRenderer": {
+                "owner": {
+                  "videoOwnerRenderer": {
+                    "title": {"runs": [{"text": "Rick Astley"}]},
+                    "subscriberCountText": {"simpleText": "3.2M subscribers"}
+                  }
+                }
+              }
+            },
+            {
+              "sentimentBarRenderer": {
+                "tooltip": "1.5M / 50K"
+              }
+            }
+          ]
+        }
+      },
+      "secondaryResults": {
+        "secondaryResults": {
+          "results": [
+            {
+              "compactVideoRenderer": {
+                "videoId": "oHg5SJYRHA0",
+                "thumbnail": {"thumbnails": [{"url": "https://i.ytimg.com/vi/oHg5SJYRHA0/hqdefault.jpg"}]},
+                "title": {"simpleText": "Related Video"},
+                "longBylineText": {
+                  "runs": [
+                    {
+                      "text": "Other Channel",
+                      "navigationEndpoint": {"browseEndpoint": {"browseId": "UCother"}}
+                    }
+                  ]
+                },
+                "viewCountText": {"simpleText": "100,000 views"},
+                "lengthText": {"simpleText": "3:45"}
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

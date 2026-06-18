@@ -1,0 +1,21 @@
+{
+  "name": "wt-5-extras",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monorepo of SponsorBlock, Return YouTube Dislike and PWA helpers for wt-5.",
+  "license": "GPL-3.0-or-later",
+  "packageManager": "pnpm@11.2.2",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r exec rm -rf dist node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

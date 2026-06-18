@@ -1,0 +1,26 @@
+{
+  "name": "@wt-5/ryd-web",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Return YouTube Dislike API client for the web (ESM, fetch-based, LRU cache).",
+  "license": "GPL-3.0-or-later",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "msw": "^2.3.0",
+    "tsup": "^8.1.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.0"
+  }
+}

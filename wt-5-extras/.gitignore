@@ -1,0 +1,20 @@
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# Node / pnpm
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+.npmrc.local
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs
+*.log
