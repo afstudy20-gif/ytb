@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.afstudy20.ytb"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.afstudy20.ytb"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
     }
