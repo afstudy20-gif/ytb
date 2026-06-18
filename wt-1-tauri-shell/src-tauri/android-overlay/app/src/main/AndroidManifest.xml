@@ -6,6 +6,12 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
+    <!--
+      This manifest intentionally mirrors the structure `tauri android init`
+      generates (same activity + theme) so it stays compatible with the
+      generated styles.xml, and only ADDS the PlaybackService below.
+      Keep the activity block in sync with the Tauri template.
+    -->
     <application
         android:allowBackup="false"
         android:label="YTB"
@@ -16,7 +22,7 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@style/AppTheme">
+            android:theme="@style/Theme.YTB">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -33,3 +39,4 @@
         </service>
     </application>
 </manifest>
+

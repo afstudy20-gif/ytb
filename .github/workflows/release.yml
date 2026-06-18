@@ -83,10 +83,18 @@ jobs:
           echo "Restoring custom Kotlin into $pkg_dir"
           cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackService.kt" "$pkg_dir/PlaybackService.kt"
           cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackPlugin.kt" "$pkg_dir/PlaybackPlugin.kt"
-          # Custom manifest (PlaybackService + foreground permissions) overrides the generated one
-          cp "$overlay/src/main/AndroidManifest.xml" "$gen/src/main/AndroidManifest.xml"
-          # build.gradle.kts with media3/kotlinx dependencies overrides the generated one
+          # build.gradle.kts with media3/kotlinx deps + abi flavors overrides the generated one
           cp "$overlay/build.gradle.kts" "$gen/build.gradle.kts"
+          # Inject PlaybackService + permissions into the GENERATED manifest
+          # (kept intact so the activity + theme stay in sync with styles.xml).
+          manifest="$gen/src/main/AndroidManifest.xml"
+          # Insert permissions right after the opening <manifest> tag.
+          perms=$(grep 'uses-permission' "$overlay/src/main/AndroidManifest.xml")
+          awk -v perms="$perms" '/<manifest/{print; print perms; next}1' "$manifest" > "$manifest.tmp" && mv "$manifest.tmp" "$manifest"
+          # Insert the <service> block right before </application>.
+          service_block=$(sed -n '/<service name=".PlaybackService"/,/<\/service>/p' "$overlay/src/main/AndroidManifest.xml" | sed 's/^ *//')
+          awk -v svc="$service_block" '/<\/application>/{print svc}1' "$manifest" > "$manifest.tmp" && mv "$manifest.tmp" "$manifest"
+          echo "=== patched manifest ==="; cat "$manifest"
 
       - name: Build Android (release)
         working-directory: wt-1-tauri-shell
