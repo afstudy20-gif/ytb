@@ -46,7 +46,7 @@ jobs:
           version: 11.2.2
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: pnpm
           cache-dependency-path: wt-2-ui/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
@@ -65,7 +65,7 @@ jobs:
           version: 11.2.2
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: pnpm
           cache-dependency-path: wt-1-tauri-shell/pnpm-lock.yaml
       - uses: dtolnay/rust-toolchain@stable
