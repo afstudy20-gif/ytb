@@ -13,9 +13,6 @@ jobs:
   android:
     name: Android (signed APK + AAB)
     runs-on: ubuntu-latest
-    env:
-      NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
-      ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
     steps:
       - uses: actions/checkout@v4
 
@@ -71,6 +68,9 @@ jobs:
 
       - name: Init Android project
         working-directory: wt-1-tauri-shell
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
         run: pnpm tauri android init --ci
 
       - name: Apply Android overlay (PlaybackService + media3 deps)
@@ -108,6 +108,9 @@ jobs:
 
       - name: Build Android (release)
         working-directory: wt-1-tauri-shell
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
         run: |
           pnpm tauri android build --ci --apk --aab
 
