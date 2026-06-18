@@ -71,11 +71,18 @@ jobs:
         run: |
           overlay=wt-1-tauri-shell/src-tauri/android-overlay/app
           gen=wt-1-tauri-shell/src-tauri/gen/android/app
-          # Restore custom Kotlin sources (PlaybackService/PlaybackPlugin)
-          cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackService.kt" \
-             "$gen/src/main/kotlin/com/afstudy20/ytb/PlaybackService.kt"
-          cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackPlugin.kt" \
-             "$gen/src/main/kotlin/com/afstudy20/ytb/PlaybackPlugin.kt"
+          # Locate the package source dir Tauri generated (kotlin/ in older
+          # templates, java/ in 2.11+). Mirror our Kotlin files into whichever
+          # layout exists.
+          src_root=$(find "$gen/src/main" -maxdepth 2 -type d -name "com" -print -quit)
+          pkg_dir=$(find "$src_root/com/afstudy20/ytb" -type d 2>/dev/null | head -1)
+          if [ -z "$pkg_dir" ]; then
+            pkg_dir="$src_root/com/afstudy20/ytb"
+            mkdir -p "$pkg_dir"
+          fi
+          echo "Restoring custom Kotlin into $pkg_dir"
+          cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackService.kt" "$pkg_dir/PlaybackService.kt"
+          cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackPlugin.kt" "$pkg_dir/PlaybackPlugin.kt"
           # Custom manifest (PlaybackService + foreground permissions) overrides the generated one
           cp "$overlay/src/main/AndroidManifest.xml" "$gen/src/main/AndroidManifest.xml"
           # build.gradle.kts with media3/kotlinx dependencies overrides the generated one
