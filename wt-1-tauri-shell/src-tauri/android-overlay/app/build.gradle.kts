@@ -16,6 +16,9 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+        // Tauri's generated manifest references ${usesCleartextTraffic};
+        // supply the value so manifest merger can substitute it.
+        manifestPlaceholders["usesCleartextTraffic"] = "true"
     }
 
     // Tauri builds per-ABI APKs plus a "universal" variant; without these
