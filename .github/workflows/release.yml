@@ -51,7 +51,12 @@ jobs:
       - name: Decode keystore
         run: |
           mkdir -p "${{ github.workspace }}/.keys"
-          echo "${{ secrets.ANDROID_KEY_BASE64 }}" | base64 -d > "${{ github.workspace }}/.keys/release.keystore"
+          # Use printf (no trailing newline) and pipe through base64 -d;
+          # -w0 avoids line wrapping issues when re-encoding is ever needed.
+          printf '%s' "${{ secrets.ANDROID_KEY_BASE64 }}" | base64 -d > "${{ github.workspace }}/.keys/release.keystore"
+          # Sanity check: keystore must be non-empty and start with the JKS/PKCS12 magic.
+          test -s "${{ github.workspace }}/.keys/release.keystore"
+          file "${{ github.workspace }}/.keys/release.keystore" || true
 
       - name: Cache cargo
         uses: actions/cache@v4
