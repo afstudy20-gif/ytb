@@ -75,6 +75,12 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    // Tauri's generated code (Logger, RustWebChromeClient, MainActivity) uses
+    // BuildConfig fields and AndroidX Activity APIs; enable both.
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {

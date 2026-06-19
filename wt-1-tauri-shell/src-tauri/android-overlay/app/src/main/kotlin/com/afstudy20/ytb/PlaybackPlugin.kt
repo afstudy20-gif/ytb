@@ -116,12 +116,11 @@ class PlaybackPlugin(private val activity: Activity) : Plugin(activity) {
         bind()
     }
 
-    override fun destroy() {
+    fun teardown() {
         if (bound) {
             runCatching { activity.unbindService(connection) }
             bound = false
         }
-        super.destroy()
     }
 
     private fun bind() {
