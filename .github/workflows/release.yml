@@ -56,7 +56,12 @@ jobs:
           printf '%s' "${{ secrets.ANDROID_KEY_BASE64 }}" | base64 -d > "${{ github.workspace }}/.keys/release.keystore"
           # Sanity check: keystore must be non-empty and start with the JKS/PKCS12 magic.
           test -s "${{ github.workspace }}/.keys/release.keystore"
+          echo "--- file type ---"
           file "${{ github.workspace }}/.keys/release.keystore" || true
+          echo "--- size ---"
+          wc -c < "${{ github.workspace }}/.keys/release.keystore"
+          echo "--- keytool -list (store password works?) ---"
+          keytool -list -keystore "${{ github.workspace }}/.keys/release.keystore" -storepass "${{ secrets.ANDROID_KEY_PASSWORD }}" 2>&1 | sed -E 's/(=+).*/\1 [masked]/' || true
 
       - name: Cache cargo
         uses: actions/cache@v4
