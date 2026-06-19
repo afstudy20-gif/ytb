@@ -103,8 +103,8 @@ jobs:
           # inject our media permissions + PlaybackService.
           manifest="$gen/src/main/AndroidManifest.xml"
 
-          # Inject foreground/media permissions after the existing INTERNET permission.
-          perl -i -0pe 's|<uses-permission android:name="android.permission.INTERNET" />|<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <uses-permission android:name="android.permission.WAKE_LOCK" />\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />|s' "$manifest"
+          # Inject foreground/media permissions right after the opening <manifest> tag to avoid format issues.
+          perl -i -0pe 's|(<manifest\b[^>]*>)|$1\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <uses-permission android:name="android.permission.WAKE_LOCK" />\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />|s' "$manifest"
 
           # Inject PlaybackService before </application>.
           perl -i -0pe 's|</application>|\n        <service\n            android:name=".PlaybackService"\n            android:exported="false"\n            android:foregroundServiceType="mediaPlayback">\n            <intent-filter>\n                <action android:name="androidx.media3.session.MediaSessionService" />\n            </intent-filter>\n        </service>\n    </application>|s' "$manifest"
