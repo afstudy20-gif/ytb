@@ -79,6 +79,8 @@ android {
 
 dependencies {
     implementation(project(":tauri-android"))
+    // enableEdgeToEdge (used by Tauri's generated MainActivity) lives here.
+    implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.media:media:1.7.0")
     implementation("androidx.media3:media3-exoplayer:1.4.1")

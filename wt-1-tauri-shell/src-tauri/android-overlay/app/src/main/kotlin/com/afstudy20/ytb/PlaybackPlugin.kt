@@ -1,5 +1,6 @@
 package com.afstudy20.ytb
 
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -7,16 +8,31 @@ import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
 import app.tauri.annotation.Command
+import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
+import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
+@InvokeArg
+class PlayArgs {
+    lateinit var url: String
+    var title: String? = null
+    var artist: String? = null
+    var artwork: String? = null
+}
+
+@InvokeArg
+class SeekArgs {
+    var position_ms: Long = 0L
+}
+
 @TauriPlugin
-class PlaybackPlugin(private val activity: android.app.Activity) : Plugin(activity) {
+class PlaybackPlugin(private val activity: Activity) : Plugin(activity) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var bound = false
 
@@ -32,18 +48,15 @@ class PlaybackPlugin(private val activity: android.app.Activity) : Plugin(activi
 
     @Command
     fun play(invoke: Invoke) {
-        val url = invoke.getString("url") ?: return invoke.reject("url is required")
-        val title = invoke.getString("title") ?: ""
-        val artist = invoke.getString("artist") ?: ""
-        val artwork = invoke.getString("artwork")
-
+        val args = invoke.parseArgs(PlayArgs::class.java)
+        if (args.url.isBlank()) return invoke.reject("url is required")
         scope.launch {
             sendAction(
                 PlaybackService.ACTION_PLAY,
-                PlaybackService.EXTRA_URL to url,
-                PlaybackService.EXTRA_TITLE to title,
-                PlaybackService.EXTRA_ARTIST to artist,
-                PlaybackService.EXTRA_ARTWORK to artwork,
+                PlaybackService.EXTRA_URL to args.url,
+                PlaybackService.EXTRA_TITLE to (args.title ?: ""),
+                PlaybackService.EXTRA_ARTIST to (args.artist ?: ""),
+                PlaybackService.EXTRA_ARTWORK to args.artwork,
             )
             invoke.resolve()
         }
@@ -67,9 +80,9 @@ class PlaybackPlugin(private val activity: android.app.Activity) : Plugin(activi
 
     @Command
     fun seek(invoke: Invoke) {
-        val positionMs = invoke.getLong("position_ms") ?: return invoke.reject("position_ms is required")
+        val args = invoke.parseArgs(SeekArgs::class.java)
         scope.launch {
-            sendAction(PlaybackService.ACTION_SEEK, PlaybackService.EXTRA_POSITION_MS to positionMs)
+            sendAction(PlaybackService.ACTION_SEEK, PlaybackService.EXTRA_POSITION_MS to args.position_ms)
             invoke.resolve()
         }
     }
@@ -90,14 +103,12 @@ class PlaybackPlugin(private val activity: android.app.Activity) : Plugin(activi
 
     @Command
     fun getPlaybackState(invoke: Invoke) {
-        invoke.resolve(
-            mapOf(
-                "playing" to false,
-                "position_ms" to 0,
-                "duration_ms" to null,
-                "current_id" to null,
-            ),
-        )
+        val result = JSObject()
+        result.put("playing", false)
+        result.put("position_ms", 0)
+        result.put("duration_ms", null as Any?)
+        result.put("current_id", null as Any?)
+        invoke.resolve(result)
     }
 
     override fun load(webView: android.webkit.WebView) {
@@ -107,7 +118,7 @@ class PlaybackPlugin(private val activity: android.app.Activity) : Plugin(activi
 
     override fun destroy() {
         if (bound) {
-            activity.unbindService(connection)
+            runCatching { activity.unbindService(connection) }
             bound = false
         }
         super.destroy()
