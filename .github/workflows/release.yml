@@ -113,11 +113,6 @@ jobs:
             echo "storeFile=${{ github.workspace }}/.keys/release.keystore"
           } > wt-1-tauri-shell/src-tauri/gen/android/keystore.properties
 
-          # Diagnostic: show the generated MainActivity so we can match its base class.
-          echo "===== generated MainActivity.kt ====="
-          find "$gen/src/main" -name "MainActivity.kt" -exec cat {} \;
-          echo "===== end MainActivity.kt ====="
-
       - name: Build Android (release)
         working-directory: wt-1-tauri-shell
         env:
