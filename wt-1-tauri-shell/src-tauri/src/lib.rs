@@ -116,6 +116,7 @@ async fn get_playback_state() -> Result<PlaybackState, String> {
     Ok(lock_state()?.playback.clone())
 }
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
