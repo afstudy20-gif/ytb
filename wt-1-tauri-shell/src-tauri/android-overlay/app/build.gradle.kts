@@ -91,6 +91,11 @@ dependencies {
     // enableEdgeToEdge extension itself lives in androidx.activity.
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.core:core-ktx:1.15.0")
+    // Tauri's generated RustWebView/RustWebViewClient use androidx.webkit
+    // (WebViewFeature, WebViewCompat, WebViewAssetLoader).
+    implementation("androidx.webkit:webkit:1.12.1")
+    // TauriActivity/WryActivity use ProcessLifecycleOwner.
+    implementation("androidx.lifecycle:lifecycle-process:2.8.7")
     implementation("androidx.media:media:1.7.0")
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     implementation("androidx.media3:media3-session:1.4.1")
