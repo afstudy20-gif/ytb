@@ -66,8 +66,12 @@ jobs:
             wt-1-tauri-shell/src-tauri/target
           key: ${{ runner.os }}-cargo-android-${{ hashFiles('wt-1-tauri-shell/src-tauri/Cargo.lock') }}
 
-      - name: Install frontend
+      - name: Install shell frontend
         working-directory: wt-1-tauri-shell
+        run: pnpm install --frozen-lockfile
+
+      - name: Install UI frontend
+        working-directory: wt-2-ui
         run: pnpm install --frozen-lockfile
 
       - name: Init Android project
