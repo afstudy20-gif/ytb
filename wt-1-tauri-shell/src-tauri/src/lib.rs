@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
+mod innertube_bridge;
+use innertube_bridge::InnertubeState;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueueItem {
     pub id: String,
@@ -10,7 +13,7 @@ pub struct QueueItem {
     pub artwork_url: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PlaybackState {
     pub playing: bool,
     pub position_ms: u64,
@@ -22,17 +25,6 @@ pub struct PlaybackState {
 struct PlayerState {
     queue: Vec<QueueItem>,
     playback: PlaybackState,
-}
-
-impl Default for PlaybackState {
-    fn default() -> Self {
-        Self {
-            playing: false,
-            position_ms: 0,
-            duration_ms: None,
-            current_id: None,
-        }
-    }
 }
 
 static PLAYER_STATE: OnceLock<Mutex<PlayerState>> = OnceLock::new();
@@ -119,6 +111,9 @@ async fn get_playback_state() -> Result<PlaybackState, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(InnertubeState {
+            client: innertube::InnerTube::new(),
+        })
         .invoke_handler(tauri::generate_handler![
             play,
             pause,
@@ -126,7 +121,15 @@ pub fn run() {
             seek,
             stop,
             set_queue,
-            get_playback_state
+            get_playback_state,
+            innertube_bridge::yt_search,
+            innertube_bridge::yt_trending,
+            innertube_bridge::yt_video,
+            innertube_bridge::yt_streams,
+            innertube_bridge::yt_channel,
+            innertube_bridge::yt_playlist,
+            innertube_bridge::yt_sponsor_block,
+            innertube_bridge::yt_return_youtube_dislike
         ])
         .run(tauri::generate_context!())
         .expect("error while running Tauri application");

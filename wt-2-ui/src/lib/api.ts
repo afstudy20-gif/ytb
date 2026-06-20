@@ -9,6 +9,7 @@ import type {
   VideoSummary,
 } from './types.ts'
 import { MockClient } from './mockClient.ts'
+import { isTauriEnv, TauriClient } from './tauriClient.ts'
 
 export interface YtClient {
   search(query: string, opts?: SearchOpts): Promise<SearchResult>
@@ -85,7 +86,14 @@ export class RealClient implements YtClient {
   }
 }
 
-export const client: YtClient =
-  import.meta.env.VITE_BACKEND === 'real'
-    ? new RealClient(import.meta.env.VITE_BACKEND_URL ?? '/api')
-    : new MockClient()
+function createClient(): YtClient {
+  if (import.meta.env.VITE_BACKEND === 'real') {
+    return new RealClient(import.meta.env.VITE_BACKEND_URL ?? '/api')
+  }
+  if (isTauriEnv()) {
+    return new TauriClient()
+  }
+  return new MockClient()
+}
+
+export const client: YtClient = createClient()
