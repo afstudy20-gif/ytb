@@ -90,7 +90,7 @@ function resolveClient(): YtClient {
   if (import.meta.env.VITE_BACKEND === 'real') {
     return new RealClient(import.meta.env.VITE_BACKEND_URL ?? '/api')
   }
-  if (isTauriEnv()) {
+  if (import.meta.env.VITE_TAURI === '1' || isTauriEnv()) {
     return new TauriClient()
   }
   return new MockClient()
