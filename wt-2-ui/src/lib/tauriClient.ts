@@ -59,9 +59,10 @@ export class TauriClient implements YtClient {
 }
 
 export function isTauriEnv(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    // @ts-expect-error Tauri exposes __TAURI__ on window in the app runtime.
-    Boolean(window.__TAURI__)
-  )
+  if (typeof window === 'undefined') return false
+  // @ts-expect-error Tauri internals are injected at runtime.
+  const hasInternals = Boolean(window.__TAURI_INTERNALS__)
+  // @ts-expect-error Legacy global kept for compatibility.
+  const hasLegacy = Boolean(window.__TAURI__)
+  return hasInternals || hasLegacy
 }

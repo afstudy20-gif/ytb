@@ -86,7 +86,7 @@ export class RealClient implements YtClient {
   }
 }
 
-function createClient(): YtClient {
+function resolveClient(): YtClient {
   if (import.meta.env.VITE_BACKEND === 'real') {
     return new RealClient(import.meta.env.VITE_BACKEND_URL ?? '/api')
   }
@@ -96,4 +96,40 @@ function createClient(): YtClient {
   return new MockClient()
 }
 
-export const client: YtClient = createClient()
+class LazyClient implements YtClient {
+  private _client?: YtClient
+
+  private getClient(): YtClient {
+    if (!this._client) {
+      this._client = resolveClient()
+    }
+    return this._client
+  }
+
+  search(query: string, opts?: SearchOpts): Promise<SearchResult> {
+    return this.getClient().search(query, opts)
+  }
+  trending(region?: string): Promise<VideoSummary[]> {
+    return this.getClient().trending(region)
+  }
+  video(id: string): Promise<VideoDetail> {
+    return this.getClient().video(id)
+  }
+  streams(id: string): Promise<StreamMap> {
+    return this.getClient().streams(id)
+  }
+  channel(id: string): Promise<ChannelDetail> {
+    return this.getClient().channel(id)
+  }
+  playlist(id: string): Promise<PlaylistDetail> {
+    return this.getClient().playlist(id)
+  }
+  sponsorBlockSegments(id: string, categories: string[]): Promise<SponsorSegment[]> {
+    return this.getClient().sponsorBlockSegments(id, categories)
+  }
+  returnYouTubeDislike(id: string): Promise<{ likes: number; dislikes: number }> {
+    return this.getClient().returnYouTubeDislike(id)
+  }
+}
+
+export const client: YtClient = new LazyClient()
