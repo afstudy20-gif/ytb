@@ -471,6 +471,24 @@ fn to_innertube_filter(filter: Option<&str>) -> SearchFilter {
 // Tauri state and commands
 // ---------------------------------------------------------------------------
 
+pub const PIPED_INSTANCES: &[&str] = &[
+    "https://pipedapi.kavin.rocks",
+    "https://api.piped.projecthibernia.com",
+    "https://pipedapi.adminforge.de",
+    "https://pipedapi.moomoo.me",
+    "https://pipedapi.drgns.space",
+    "https://pipedapi.ducks.party",
+    "https://pipedapi.frontendfriendly.xyz",
+];
+
+pub const INVIDIOUS_INSTANCES: &[&str] = &[
+    "https://vid.puffyan.us",
+    "https://y.com.sb",
+    "https://iv.nboeck.de",
+    "https://iv.datura.network",
+    "https://iv.nboeck.de",
+];
+
 pub struct InnertubeState {
     pub client: InnerTube,
 }
@@ -517,12 +535,27 @@ pub async fn yt_trending(
     region: Option<String>,
 ) -> Result<Vec<VideoSummary>, String> {
     let region = region.as_deref().unwrap_or("US");
-    let videos = state
+    if let Ok(videos) = state.client.trending(region).await {
+        return Ok(videos.iter().map(map_innertube_video_summary).collect());
+    }
+    // InnerTube's FEtrending endpoint is fragile; fall back to a generic
+    // search so the home screen is never empty.
+    let results = state
         .client
-        .trending(region)
+        .search("trending", Some(SearchFilter {
+            kind: SearchKind::Video,
+            ..Default::default()
+        }))
         .await
-        .map_err(|e| format!("trending failed: {e}"))?;
-    Ok(videos.iter().map(map_innertube_video_summary).collect())
+        .map_err(|e| format!("trending fallback failed: {e}"))?;
+    Ok(results
+        .items
+        .iter()
+        .filter_map(|item| match item {
+            innertube::SearchItem::Video(v) => Some(map_innertube_video(v)),
+            _ => None,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -538,17 +571,91 @@ pub async fn yt_video(
     Ok(map_video_detail(&detail))
 }
 
+async fn fetch_invidious_streams(id: &str) -> Option<StreamMap> {
+    for host in INVIDIOUS_INSTANCES {
+        let url = format!("{host}/api/v1/videos/{id}");
+        let Ok(resp) = reqwest::get(&url).await else {
+            continue;
+        };
+        if !resp.status().is_success() {
+            continue;
+        }
+        let Ok(json) = resp.json::<serde_json::Value>().await else {
+            continue;
+        };
+
+        fn to_format(value: &serde_json::Value) -> Option<Format> {
+            let itag = value
+                .get("itag")
+                .and_then(|v| v.as_str())
+                .and_then(|s| s.parse::<u32>().ok())
+                .or_else(|| value.get("itag").and_then(|v| v.as_u64()).map(|n| n as u32))?;
+            let url = value.get("url").and_then(|v| v.as_str())?.to_string();
+            let mime_type = value
+                .get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let quality_label = value
+                .get("qualityLabel")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let bitrate = value
+                .get("bitrate")
+                .and_then(|v| v.as_str())
+                .and_then(|s| s.parse::<u64>().ok())
+                .or_else(|| value.get("bitrate").and_then(|v| v.as_u64()))
+                .unwrap_or(0);
+            let audio_only = mime_type.starts_with("audio");
+            Some(Format {
+                itag,
+                quality_label,
+                mime_type,
+                bitrate,
+                url,
+                audio_only,
+            })
+        }
+
+        let formats: Vec<Format> = json
+            .get("formatStreams")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(to_format).collect())
+            .unwrap_or_default();
+        let adaptive_formats: Vec<Format> = json
+            .get("adaptiveFormats")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(to_format).collect())
+            .unwrap_or_default();
+
+        if formats.is_empty() && adaptive_formats.is_empty() {
+            continue;
+        }
+        return Some(StreamMap {
+            video_id: id.to_string(),
+            formats,
+            adaptive_formats,
+            expires_in_seconds: 21_600,
+        });
+    }
+    None
+}
+
 #[tauri::command]
 pub async fn yt_streams(
     state: tauri::State<'_, InnertubeState>,
     id: String,
 ) -> Result<StreamMap, String> {
-    let streams = state
-        .client
-        .streams(&id)
-        .await
-        .map_err(|e| format!("stream resolution failed: {e}"))?;
-    Ok(map_stream_map(&id, &streams))
+    match state.client.streams(&id).await {
+        Ok(streams) if !streams.is_empty() => Ok(map_stream_map(&id, &streams)),
+        Ok(_) | Err(_) => {
+            if let Some(sm) = fetch_invidious_streams(&id).await {
+                return Ok(sm);
+            }
+            Err("no usable streams found for this video".to_string())
+        }
+    }
 }
 
 #[tauri::command]

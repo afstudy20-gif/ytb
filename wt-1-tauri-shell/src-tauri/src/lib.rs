@@ -112,7 +112,9 @@ async fn get_playback_state() -> Result<PlaybackState, String> {
 pub fn run() {
     tauri::Builder::default()
         .manage(InnertubeState {
-            client: innertube::InnerTube::new(),
+            client: innertube::InnerTube::with_piped_fallback(
+                innertube_bridge::PIPED_INSTANCES.iter().map(|s| (*s).to_string()).collect(),
+            ),
         })
         .invoke_handler(tauri::generate_handler![
             play,
