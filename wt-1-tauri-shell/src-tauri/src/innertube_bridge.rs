@@ -326,14 +326,14 @@ fn map_innertube_playlist(p: &innertube::SearchResultPlaylist) -> PlaylistSummar
     }
 }
 
-fn map_innertube_search_item(item: &innertube::SearchItem) -> Option<SearchItem> {
+fn map_innertube_search_item(item: &innertube::SearchItem) -> Vec<SearchItem> {
     match item {
-        innertube::SearchItem::Video(v) => Some(SearchItem::Video(map_innertube_video(v))),
-        innertube::SearchItem::Channel(c) => Some(SearchItem::Channel(map_innertube_channel(c))),
-        innertube::SearchItem::Playlist(p) => Some(SearchItem::Playlist(map_innertube_playlist(p))),
+        innertube::SearchItem::Video(v) => vec![SearchItem::Video(map_innertube_video(v))],
+        innertube::SearchItem::Channel(c) => vec![SearchItem::Channel(map_innertube_channel(c))],
+        innertube::SearchItem::Playlist(p) => vec![SearchItem::Playlist(map_innertube_playlist(p))],
         innertube::SearchItem::Shelf { items, .. } => {
             // Flatten shelves into the result list for the UI.
-            items.iter().find_map(map_innertube_search_item)
+            items.iter().flat_map(map_innertube_search_item).collect()
         }
     }
 }
@@ -486,8 +486,148 @@ pub const INVIDIOUS_INSTANCES: &[&str] = &[
     "https://y.com.sb",
     "https://iv.nboeck.de",
     "https://iv.datura.network",
-    "https://iv.nboeck.de",
+    "https://iv.datura.network",
 ];
+
+fn author_from_invidious(json: &serde_json::Value) -> Author {
+    let name = json.get("author").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let id = json.get("authorId").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let avatar = json
+        .get("authorThumbnails")
+        .and_then(|v| v.as_array())
+        .and_then(|a| a.last())
+        .and_then(|t| t.get("url").and_then(|u| u.as_str()))
+        .unwrap_or(DEFAULT_AVATAR)
+        .to_string();
+    let subscribers = json
+        .get("subCount")
+        .and_then(|v| v.as_u64())
+        .or_else(|| json.get("subscriberCount").and_then(|v| v.as_u64()));
+    Author {
+        id,
+        name,
+        avatar_url: avatar,
+        subscriber_count: subscribers,
+        verified: false,
+    }
+}
+
+fn thumbnail_from_invidious(json: &serde_json::Value) -> Vec<Thumbnail> {
+    if let Some(url) = json
+        .get("videoThumbnails")
+        .and_then(|v| v.as_array())
+        .and_then(|a| a.iter().find(|t| t.get("quality").and_then(|q| q.as_str()) == Some("maxresdefault")))
+        .or_else(|| {
+            json.get("videoThumbnails")
+                .and_then(|v| v.as_array())
+                .and_then(|a| a.last())
+        })
+        .and_then(|t| t.get("url").and_then(|u| u.as_str()))
+    {
+        return vec![Thumbnail {
+            url: url.to_string(),
+            width: DEFAULT_THUMBNAIL_WIDTH,
+            height: DEFAULT_THUMBNAIL_HEIGHT,
+        }];
+    }
+    if let Some(url) = json.get("playlistThumbnail").and_then(|v| v.as_str()) {
+        return vec![Thumbnail {
+            url: url.to_string(),
+            width: DEFAULT_THUMBNAIL_WIDTH,
+            height: DEFAULT_THUMBNAIL_HEIGHT,
+        }];
+    }
+    vec![]
+}
+
+async fn fetch_invidious_search(query: &str) -> Option<Vec<SearchItem>> {
+    for host in INVIDIOUS_INSTANCES {
+        let url = format!("{host}/api/v1/search?q={}", urlencoding::encode(query));
+        let Ok(resp) = reqwest::get(&url).await else {
+            continue;
+        };
+        if !resp.status().is_success() {
+            continue;
+        }
+        let Ok(arr) = resp.json::<Vec<serde_json::Value>>().await else {
+            continue;
+        };
+        let mut out = Vec::new();
+        for item in arr {
+            let item_type = item.get("type").and_then(|v| v.as_str()).unwrap_or("");
+            match item_type {
+                "video" => {
+                    let author = author_from_invidious(&item);
+                    let id = item.get("videoId").and_then(|v| v.as_str())?.to_string();
+                    let title = item.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let duration = item.get("lengthSeconds").and_then(|v| v.as_u64()).unwrap_or(0);
+                    let view_count = item.get("viewCount").and_then(|v| v.as_u64()).unwrap_or(0);
+                    let published_text = item
+                        .get("publishedText")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    out.push(SearchItem::Video(VideoSummary {
+                        r#type: "video".to_string(),
+                        id,
+                        title,
+                        author,
+                        thumbnails: thumbnail_from_invidious(&item),
+                        duration_seconds: duration,
+                        view_count,
+                        published_text,
+                    }));
+                }
+                "channel" => {
+                    let id = item.get("authorId").and_then(|v| v.as_str())?.to_string();
+                    let name = item.get("author").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let avatar = thumbnail_url_single(
+                        item.get("authorThumbnails")
+                            .and_then(|v| v.as_array())
+                            .and_then(|a| a.last())
+                            .and_then(|t| t.get("url").and_then(|u| u.as_str())),
+                    );
+                    let subscribers = item.get("subCount").and_then(|v| v.as_u64()).unwrap_or(0);
+                    let video_count = item.get("videoCount").and_then(|v| v.as_u64()).unwrap_or(0);
+                    out.push(SearchItem::Channel(ChannelSummary {
+                        r#type: "channel".to_string(),
+                        id,
+                        name,
+                        avatar_url: avatar,
+                        subscriber_count: subscribers,
+                        video_count,
+                        verified: false,
+                        description_short: String::new(),
+                    }));
+                }
+                "playlist" => {
+                    let id = item.get("playlistId").and_then(|v| v.as_str())?.to_string();
+                    let title = item.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let author = author_from_invidious(&item);
+                    let thumbnail = item
+                        .get("playlistThumbnail")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or(DEFAULT_AVATAR)
+                        .to_string();
+                    let video_count = item.get("videoCount").and_then(|v| v.as_u64()).unwrap_or(0);
+                    out.push(SearchItem::Playlist(PlaylistSummary {
+                        r#type: "playlist".to_string(),
+                        id,
+                        title,
+                        author,
+                        thumbnail_url: thumbnail,
+                        video_count,
+                    }));
+                }
+                _ => {}
+            }
+        }
+        if !out.is_empty() {
+            return Some(out);
+        }
+    }
+    None
+}
 
 pub struct InnertubeState {
     pub client: InnerTube,
@@ -522,8 +662,27 @@ pub async fn yt_search(
             .map_err(|e| format!("search failed: {e}"))?
     };
 
+    let items: Vec<SearchItem> = results.items.iter().flat_map(map_innertube_search_item).collect();
+    if !items.is_empty() {
+        return Ok(SearchResult {
+            items,
+            continuation: results.continuation,
+            estimated_results: results.estimated_results.unwrap_or(0),
+        });
+    }
+
+    // Fallback to Invidious when InnerTube returns an empty result set.
+    if let Some(fallback_items) = fetch_invidious_search(&request.query).await {
+        let estimated = fallback_items.len() as u64;
+        return Ok(SearchResult {
+            items: fallback_items,
+            continuation: None,
+            estimated_results: estimated,
+        });
+    }
+
     Ok(SearchResult {
-        items: results.items.iter().filter_map(map_innertube_search_item).collect(),
+        items,
         continuation: results.continuation,
         estimated_results: results.estimated_results.unwrap_or(0),
     })
