@@ -123,6 +123,9 @@ class PlaybackPlugin(private val activity: Activity) : Plugin(activity) {
         super.load(webView)
         try {
             webView.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            // Keep the current Activity reachable from Rust. VideoPlayerHelper is
+            // attached lazily from the Rust JNI bridge so we don't load ExoPlayer
+            // classes during app startup.
             PlaybackPlugin.activity = activity
             bind()
         } catch (t: Throwable) {

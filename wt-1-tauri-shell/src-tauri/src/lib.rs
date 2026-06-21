@@ -114,6 +114,9 @@ async fn get_playback_state() -> Result<PlaybackState, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Register the Android playback plugin so its lifecycle callbacks run and
+        // the current Activity is captured for the native ExoPlayer overlay.
+        .plugin(tauri::plugin::Builder::<tauri::Wry>::new("playback").build())
         .setup(|app| {
             let proxy = tauri::async_runtime::block_on(stream_proxy::StreamProxy::start())
                 .expect("failed to start stream proxy");
