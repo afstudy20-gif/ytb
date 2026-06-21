@@ -113,6 +113,7 @@ class PlaybackPlugin(private val activity: Activity) : Plugin(activity) {
 
     override fun load(webView: android.webkit.WebView) {
         super.load(webView)
+        webView.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         bind()
     }
 

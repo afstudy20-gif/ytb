@@ -5,6 +5,7 @@
 
 use std::str::FromStr;
 
+use crate::stream_proxy::StreamProxy;
 use innertube::{InnerTube, SearchFilter, SearchKind, SortBy};
 use serde::{Deserialize, Serialize};
 
@@ -646,6 +647,7 @@ async fn fetch_invidious_search(query: &str) -> Option<Vec<SearchItem>> {
 
 pub struct InnertubeState {
     pub client: InnerTube,
+    pub proxy: StreamProxy,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -816,20 +818,31 @@ async fn fetch_invidious_streams(id: &str) -> Option<StreamMap> {
     None
 }
 
+fn proxied_stream_map(proxy: &StreamProxy, mut sm: StreamMap) -> StreamMap {
+    for f in &mut sm.formats {
+        f.url = proxy.proxied_url(&f.url);
+    }
+    for f in &mut sm.adaptive_formats {
+        f.url = proxy.proxied_url(&f.url);
+    }
+    sm
+}
+
 #[tauri::command]
 pub async fn yt_streams(
     state: tauri::State<'_, InnertubeState>,
     id: String,
 ) -> Result<StreamMap, String> {
     match state.client.streams(&id).await {
-        Ok(streams) if !streams.is_empty() => Ok(map_stream_map(&id, &streams)),
-        Ok(_) | Err(_) => {
-            if let Some(sm) = fetch_invidious_streams(&id).await {
-                return Ok(sm);
-            }
-            Err("no usable streams found for this video".to_string())
+        Ok(streams) if !streams.is_empty() => {
+            return Ok(proxied_stream_map(&state.proxy, map_stream_map(&id, &streams)))
         }
+        Ok(_) | Err(_) => {}
     }
+    if let Some(sm) = fetch_invidious_streams(&id).await {
+        return Ok(proxied_stream_map(&state.proxy, sm));
+    }
+    Err("no usable streams found for this video".to_string())
 }
 
 #[tauri::command]

@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, MutexGuard, OnceLock};
+use tauri::Manager;
 
 mod innertube_bridge;
+mod stream_proxy;
 use innertube_bridge::InnertubeState;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,10 +113,16 @@ async fn get_playback_state() -> Result<PlaybackState, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .manage(InnertubeState {
-            client: innertube::InnerTube::with_piped_fallback(
-                innertube_bridge::PIPED_INSTANCES.iter().map(|s| (*s).to_string()).collect(),
-            ),
+        .setup(|app| {
+            let proxy = tauri::async_runtime::block_on(stream_proxy::StreamProxy::start())
+                .expect("failed to start stream proxy");
+            app.manage(InnertubeState {
+                client: innertube::InnerTube::with_piped_fallback(
+                    innertube_bridge::PIPED_INSTANCES.iter().map(|s| (*s).to_string()).collect(),
+                ),
+                proxy,
+            });
+            Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             play,
