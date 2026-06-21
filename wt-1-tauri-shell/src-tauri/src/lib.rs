@@ -115,9 +115,6 @@ async fn get_playback_state() -> Result<PlaybackState, String> {
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            #[cfg(target_os = "android")]
-            video_player::attach_activity();
-
             let proxy = tauri::async_runtime::block_on(stream_proxy::StreamProxy::start())
                 .expect("failed to start stream proxy");
             app.manage(InnertubeState {
