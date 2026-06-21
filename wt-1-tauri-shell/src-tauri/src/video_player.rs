@@ -29,7 +29,7 @@ pub fn attach_activity() {
     {
         let _ = with_video_env(|env, cls| {
             let ctx = ndk_context::android_context();
-            let ctx_obj = unsafe { jni::objects::JObject::from_raw(ctx.object().cast()) };
+            let ctx_obj = unsafe { jni::objects::JObject::from_raw(ctx.context().cast()) };
             env.call_static_method(
                 &cls,
                 "attach",
