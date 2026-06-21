@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Thumbnail {
     pub url: String,
     pub width: u32,
@@ -20,6 +21,7 @@ pub struct Thumbnail {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Author {
     pub id: String,
     pub name: String,
@@ -41,6 +43,7 @@ pub enum SearchItem {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VideoSummary {
     pub r#type: String,
     pub id: String,
@@ -53,6 +56,7 @@ pub struct VideoSummary {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ChannelSummary {
     pub r#type: String,
     pub id: String,
@@ -65,6 +69,7 @@ pub struct ChannelSummary {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PlaylistSummary {
     pub r#type: String,
     pub id: String,
@@ -75,6 +80,7 @@ pub struct PlaylistSummary {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SearchResult {
     pub items: Vec<SearchItem>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -83,6 +89,7 @@ pub struct SearchResult {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Chapter {
     pub title: String,
     pub start_seconds: u64,
@@ -90,6 +97,7 @@ pub struct Chapter {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VideoDetail {
     pub id: String,
     pub title: String,
@@ -105,6 +113,7 @@ pub struct VideoDetail {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Format {
     pub itag: u32,
     pub quality_label: String,
@@ -115,6 +124,7 @@ pub struct Format {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StreamMap {
     pub video_id: String,
     pub formats: Vec<Format>,
@@ -123,6 +133,7 @@ pub struct StreamMap {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ChannelDetail {
     pub id: String,
     pub name: String,
@@ -138,6 +149,7 @@ pub struct ChannelDetail {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PlaylistDetail {
     pub id: String,
     pub title: String,
@@ -149,13 +161,16 @@ pub struct PlaylistDetail {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SponsorSegment {
     pub category: String,
     pub segment: [f64; 2],
+    #[serde(rename = "UUID")]
     pub uuid: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RydResult {
     pub likes: u64,
     pub dislikes: u64,
