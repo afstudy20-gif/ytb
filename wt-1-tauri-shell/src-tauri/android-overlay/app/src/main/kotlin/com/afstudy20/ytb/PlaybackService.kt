@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class PlaybackService : MediaSessionService() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -51,61 +52,73 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
-        audioManager = getSystemService(AudioManager::class.java)
+        try {
+            createNotificationChannel()
+            audioManager = getSystemService(AudioManager::class.java)
 
-        player = ExoPlayer.Builder(this)
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(C.USAGE_MEDIA)
-                    .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-                    .build(),
-                true,
+            player = ExoPlayer.Builder(this)
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(C.USAGE_MEDIA)
+                        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                        .build(),
+                    true,
+                )
+                .setHandleAudioBecomingNoisy(true)
+                .setWakeMode(C.WAKE_MODE_LOCAL)
+                .build()
+
+            mediaSession = MediaSession.Builder(this, requirePlayer()).build()
+            ContextCompat.registerReceiver(
+                this,
+                noisyReceiver,
+                IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
             )
-            .setHandleAudioBecomingNoisy(true)
-            .setWakeMode(C.WAKE_MODE_LOCAL)
-            .build()
-
-        mediaSession = MediaSession.Builder(this, requirePlayer()).build()
-        ContextCompat.registerReceiver(
-            this,
-            noisyReceiver,
-            IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY),
-            ContextCompat.RECEIVER_NOT_EXPORTED,
-        )
+        } catch (t: Throwable) {
+            Log.e("PlaybackService", "onCreate failed", t)
+        }
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        when (intent?.action) {
-            ACTION_PLAY -> play(
-                url = intent.getStringExtra(EXTRA_URL).orEmpty(),
-                title = intent.getStringExtra(EXTRA_TITLE).orEmpty(),
-                artist = intent.getStringExtra(EXTRA_ARTIST).orEmpty(),
-                artwork = intent.getStringExtra(EXTRA_ARTWORK),
-            )
-            ACTION_PAUSE -> pause()
-            ACTION_RESUME -> resume()
-            ACTION_SEEK -> seek(intent.getLongExtra(EXTRA_POSITION_MS, 0L))
-            ACTION_STOP -> stopPlayback()
-            ACTION_SET_QUEUE -> Unit
+        try {
+            when (intent?.action) {
+                ACTION_PLAY -> play(
+                    url = intent.getStringExtra(EXTRA_URL).orEmpty(),
+                    title = intent.getStringExtra(EXTRA_TITLE).orEmpty(),
+                    artist = intent.getStringExtra(EXTRA_ARTIST).orEmpty(),
+                    artwork = intent.getStringExtra(EXTRA_ARTWORK),
+                )
+                ACTION_PAUSE -> pause()
+                ACTION_RESUME -> resume()
+                ACTION_SEEK -> seek(intent.getLongExtra(EXTRA_POSITION_MS, 0L))
+                ACTION_STOP -> stopPlayback()
+                ACTION_SET_QUEUE -> Unit
+            }
+        } catch (t: Throwable) {
+            Log.e("PlaybackService", "onStartCommand failed", t)
         }
 
         return START_STICKY
     }
 
     override fun onDestroy() {
-        runCatching { unregisterReceiver(noisyReceiver) }
-        mediaSession?.run {
-            player.release()
-            release()
+        try {
+            runCatching { unregisterReceiver(noisyReceiver) }
+            mediaSession?.run {
+                player.release()
+                release()
+            }
+            mediaSession = null
+            player = null
+            serviceScope.cancel()
+            abandonAudioFocus()
+        } catch (t: Throwable) {
+            Log.e("PlaybackService", "onDestroy failed", t)
         }
-        mediaSession = null
-        player = null
-        serviceScope.cancel()
-        abandonAudioFocus()
         super.onDestroy()
     }
 

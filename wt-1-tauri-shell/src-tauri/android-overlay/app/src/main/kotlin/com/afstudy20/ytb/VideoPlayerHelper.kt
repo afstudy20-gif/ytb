@@ -55,55 +55,64 @@ object VideoPlayerHelper {
         width: Int,
         height: Int,
     ) {
-        val act = activity ?: run {
-            Log.w(TAG, "openPlayer: no activity attached")
-            return
+        try {
+            val act = activity ?: run {
+                Log.w(TAG, "openPlayer: no activity attached")
+                return
+            }
+            closePlayer()
+
+            val density = act.resources.displayMetrics.density
+            val px = boundsToPx(x, y, width, height, density)
+
+            val surface = PlayerView(act).apply {
+                // The web controls are hidden behind this overlay, so use ExoPlayer's
+                // native controller for play/pause/seek/fullscreen.
+                useController = true
+                setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
+            }
+            val dataSourceFactory = DefaultHttpDataSource.Factory()
+                .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            val exo = ExoPlayer.Builder(act)
+                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+                .build()
+            surface.player = exo
+
+            val frame = FrameLayout(act).apply {
+                addView(surface, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+            }
+
+            val root = act.findViewById<ViewGroup>(android.R.id.content)
+            // Add on top of the WebView so the native video surface is visible.
+            root?.addView(frame, FrameLayout.LayoutParams(px.width, px.height).apply {
+                setMargins(px.x, px.y, 0, 0)
+            })
+
+            player = exo
+            playerView = surface
+            container = frame
+
+            loadUrl(url, title, artist, artwork)
+        } catch (t: Throwable) {
+            Log.e(TAG, "openPlayer failed", t)
         }
-        closePlayer()
-
-        val density = act.resources.displayMetrics.density
-        val px = boundsToPx(x, y, width, height, density)
-
-        val surface = PlayerView(act).apply {
-            // The web controls are hidden behind this overlay, so use ExoPlayer's
-            // native controller for play/pause/seek/fullscreen.
-            useController = true
-            setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
-        }
-        val dataSourceFactory = DefaultHttpDataSource.Factory()
-            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        val exo = ExoPlayer.Builder(act)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
-            .build()
-        surface.player = exo
-
-        val frame = FrameLayout(act).apply {
-            addView(surface, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-        }
-
-        val root = act.findViewById<ViewGroup>(android.R.id.content)
-        // Add on top of the WebView so the native video surface is visible.
-        root?.addView(frame, FrameLayout.LayoutParams(px.width, px.height).apply {
-            setMargins(px.x, px.y, 0, 0)
-        })
-
-        player = exo
-        playerView = surface
-        container = frame
-
-        loadUrl(url, title, artist, artwork)
     }
 
     @JvmStatic
     fun closePlayer() {
-        playerView?.player = null
-        player?.release()
-        container?.let { c ->
-            (c.parent as? ViewGroup)?.removeView(c)
+        try {
+            playerView?.player = null
+            player?.release()
+            container?.let { c ->
+                (c.parent as? ViewGroup)?.removeView(c)
+            }
+        } catch (t: Throwable) {
+            Log.e(TAG, "closePlayer failed", t)
+        } finally {
+            player = null
+            playerView = null
+            container = null
         }
-        player = null
-        playerView = null
-        container = null
     }
 
     @JvmStatic
@@ -113,14 +122,18 @@ object VideoPlayerHelper {
 
     @JvmStatic
     fun setBounds(x: Int, y: Int, width: Int, height: Int) {
-        val act = activity ?: return
-        val density = act.resources.displayMetrics.density
-        val px = boundsToPx(x, y, width, height, density)
-        val lp = container?.layoutParams as? FrameLayout.LayoutParams ?: return
-        lp.width = px.width
-        lp.height = px.height
-        lp.setMargins(px.x, px.y, 0, 0)
-        container?.layoutParams = lp
+        try {
+            val act = activity ?: return
+            val density = act.resources.displayMetrics.density
+            val px = boundsToPx(x, y, width, height, density)
+            val lp = container?.layoutParams as? FrameLayout.LayoutParams ?: return
+            lp.width = px.width
+            lp.height = px.height
+            lp.setMargins(px.x, px.y, 0, 0)
+            container?.layoutParams = lp
+        } catch (t: Throwable) {
+            Log.e(TAG, "setBounds failed", t)
+        }
     }
 
     @JvmStatic
@@ -160,7 +173,11 @@ object VideoPlayerHelper {
 
     @JvmStatic
     fun setSurfaceVisible(visible: Boolean) {
-        container?.visibility = if (visible) View.VISIBLE else View.GONE
+        try {
+            container?.visibility = if (visible) View.VISIBLE else View.GONE
+        } catch (t: Throwable) {
+            Log.e(TAG, "setSurfaceVisible failed", t)
+        }
     }
 
     private fun boundsToPx(x: Int, y: Int, width: Int, height: Int, density: Float): Bounds {

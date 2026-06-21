@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import android.webkit.WebSettings
 import android.webkit.WebView
 import app.tauri.annotation.Command
@@ -35,6 +36,11 @@ class SeekArgs {
 
 @TauriPlugin
 class PlaybackPlugin(private val activity: Activity) : Plugin(activity) {
+    companion object {
+        @JvmStatic
+        var activity: Activity? = null
+    }
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var bound = false
 
@@ -115,13 +121,18 @@ class PlaybackPlugin(private val activity: Activity) : Plugin(activity) {
 
     override fun load(webView: WebView) {
         super.load(webView)
-        webView.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        VideoPlayerHelper.attach(activity)
-        bind()
+        try {
+            webView.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            PlaybackPlugin.activity = activity
+            bind()
+        } catch (t: Throwable) {
+            Log.e("PlaybackPlugin", "load failed", t)
+        }
     }
 
     fun teardown() {
-        VideoPlayerHelper.detach()
+        runCatching { VideoPlayerHelper.detach() }.onFailure { Log.e("PlaybackPlugin", "detach failed", it) }
+        PlaybackPlugin.activity = null
         if (bound) {
             runCatching { activity.unbindService(connection) }
             bound = false

@@ -21,23 +21,32 @@ where
         .find_class("com/afstudy20/ytb/VideoPlayerHelper")
         .map_err(|e| format!("failed to find VideoPlayerHelper class: {e}"))?;
 
+    // Attach the current Activity from the Tauri plugin lazily.  This avoids
+    // loading VideoPlayerHelper (and therefore PlayerView) during app startup,
+    // which was causing an immediate crash on launch on some devices.
+    if let Ok(plugin_cls) = env.find_class("com/afstudy20/ytb/PlaybackPlugin") {
+        if let Ok(activity) =
+            env.get_static_field(&plugin_cls, "activity", "Landroid/app/Activity;")
+        {
+            if let Ok(activity_obj) = activity.l() {
+                let _ = env.call_static_method(
+                    &cls,
+                    "attach",
+                    "(Landroid/content/Context;)V",
+                    &[jni::objects::JValue::Object(&activity_obj)],
+                );
+            }
+        }
+    }
+
     f(&mut env, cls).map_err(|e| format!("JNI call failed: {e}"))
 }
 
 pub fn attach_activity() {
     #[cfg(target_os = "android")]
     {
-        let _ = with_video_env(|env, cls| {
-            let ctx = ndk_context::android_context();
-            let ctx_obj = unsafe { jni::objects::JObject::from_raw(ctx.context().cast()) };
-            env.call_static_method(
-                &cls,
-                "attach",
-                "(Landroid/content/Context;)V",
-                &[jni::objects::JValue::Object(&ctx_obj)],
-            )?;
-            Ok(())
-        });
+        // with_video_env now performs the Activity attachment itself.
+        let _ = with_video_env(|_env, _cls| Ok(()));
     }
 }
 
