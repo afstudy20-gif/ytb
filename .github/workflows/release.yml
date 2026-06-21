@@ -98,6 +98,7 @@ jobs:
           mkdir -p "$pkg_dir"
           cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackService.kt" "$pkg_dir/PlaybackService.kt"
           cp "$overlay/src/main/kotlin/com/afstudy20/ytb/PlaybackPlugin.kt" "$pkg_dir/PlaybackPlugin.kt"
+          cp "$overlay/src/main/kotlin/com/afstudy20/ytb/VideoPlayerHelper.kt" "$pkg_dir/VideoPlayerHelper.kt"
           echo "Overlay Kotlin files copied to $pkg_dir"
 
           # Replace generated build.gradle.kts with ours (includes signing config + abi flavors).

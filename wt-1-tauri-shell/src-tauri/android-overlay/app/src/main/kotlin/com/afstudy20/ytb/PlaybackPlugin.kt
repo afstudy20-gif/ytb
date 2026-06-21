@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
+import android.webkit.WebSettings
+import android.webkit.WebView
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -111,13 +113,15 @@ class PlaybackPlugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve(result)
     }
 
-    override fun load(webView: android.webkit.WebView) {
+    override fun load(webView: WebView) {
         super.load(webView)
-        webView.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        webView.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        VideoPlayerHelper.attach(activity)
         bind()
     }
 
     fun teardown() {
+        VideoPlayerHelper.detach()
         if (bound) {
             runCatching { activity.unbindService(connection) }
             bound = false

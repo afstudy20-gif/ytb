@@ -4,6 +4,7 @@ use tauri::Manager;
 
 mod innertube_bridge;
 mod stream_proxy;
+mod video_player;
 use innertube_bridge::InnertubeState;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -114,6 +115,9 @@ async fn get_playback_state() -> Result<PlaybackState, String> {
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
+            #[cfg(target_os = "android")]
+            video_player::attach_activity();
+
             let proxy = tauri::async_runtime::block_on(stream_proxy::StreamProxy::start())
                 .expect("failed to start stream proxy");
             app.manage(InnertubeState {
@@ -132,6 +136,14 @@ pub fn run() {
             stop,
             set_queue,
             get_playback_state,
+            video_player::open_video_player,
+            video_player::close_video_player,
+            video_player::set_video_url,
+            video_player::set_video_bounds,
+            video_player::play_video,
+            video_player::pause_video,
+            video_player::seek_video,
+            video_player::get_video_state,
             innertube_bridge::yt_search,
             innertube_bridge::yt_trending,
             innertube_bridge::yt_video,
