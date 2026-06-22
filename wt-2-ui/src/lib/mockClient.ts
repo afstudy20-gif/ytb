@@ -196,12 +196,12 @@ export class MockClient implements YtClient {
   async streams(id: string): Promise<StreamMap> {
     await this.delay(300)
     const seed = hashString(id)
-    const baseUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample'
+    // These sample videos have permissive CORS headers so they work inside
+    // mobile WebViews and cross-origin iframes without ORB blocking.
     const samples = [
-      `${baseUrl}/BigBuckBunny.mp4`,
-      `${baseUrl}/ElephantsDream.mp4`,
-      `${baseUrl}/ForBiggerBlazes.mp4`,
-      `${baseUrl}/TearsOfSteel.mp4`,
+      'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+      'https://media.w3.org/2010/05/sintel/trailer.mp4',
+      'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
     ]
     const url = seededChoice(seed, samples)
     return {

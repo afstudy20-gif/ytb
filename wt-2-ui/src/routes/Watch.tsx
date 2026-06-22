@@ -9,6 +9,8 @@ import {
   BadgeCheck,
   ChevronDown,
   ChevronUp,
+  AlertCircle,
+  RotateCcw,
 } from 'lucide-react'
 import { client } from '../lib/api.ts'
 import { usePlayerStore } from '../stores/player.ts'
@@ -33,12 +35,24 @@ export function Watch() {
   const isLiked = useLikesStore((state) => state.isLiked(videoId))
   const rydEnabled = useSettingsStore((state) => state.returnYouTubeDislike)
 
-  const { data: video, isLoading: videoLoading } = useQuery({
+  const {
+    data: video,
+    isLoading: videoLoading,
+    isError: videoError,
+    error: videoErrorObj,
+    refetch: refetchVideo,
+  } = useQuery({
     queryKey: ['video', videoId],
     queryFn: () => client.video(videoId),
   })
 
-  const { data: streams, isLoading: streamsLoading } = useQuery({
+  const {
+    data: streams,
+    isLoading: streamsLoading,
+    isError: streamsError,
+    error: streamsErrorObj,
+    refetch: refetchStreams,
+  } = useQuery({
     queryKey: ['streams', videoId],
     queryFn: () => client.streams(videoId),
   })
@@ -78,7 +92,37 @@ export function Watch() {
     }
   }, [video, playVideo, addHistory])
 
-  if (videoLoading || streamsLoading || !video || !streams) {
+  const hasError = videoError || streamsError
+  const errorMessage = videoErrorObj?.message ?? streamsErrorObj?.message ?? 'Failed to load video'
+  const isLoading = videoLoading || streamsLoading
+
+  if (hasError) {
+    return (
+      <div className="flex flex-col">
+        <div className="aspect-video w-full bg-black" />
+        <div className="flex flex-col items-center px-6 py-12 text-center">
+          <div className="mb-4 rounded-full bg-surface p-4">
+            <AlertCircle className="h-8 w-8 text-accent" aria-hidden="true" />
+          </div>
+          <h3 className="text-lg font-semibold text-text">Could not load video</h3>
+          <p className="mt-1 max-w-xs text-sm text-subtext">{errorMessage}</p>
+          <button
+            type="button"
+            onClick={() => {
+              if (videoError) void refetchVideo()
+              if (streamsError) void refetchStreams()
+            }}
+            className="mt-4 flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading || !video || !streams) {
     return (
       <div className="flex flex-col">
         <Skeleton className="aspect-video w-full" />

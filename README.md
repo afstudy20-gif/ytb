@@ -17,11 +17,12 @@ Personal YouTube client for Android (Tauri v2) + web. Background audio playback,
 ## Build
 
 ```bash
-# Frontend
-cd wt-1-tauri-shell && pnpm install && pnpm tauri dev
+# Frontend (install UI deps first; Tauri loads wt-2-ui in dev)
+cd wt-2-ui && pnpm install
+cd ../wt-1-tauri-shell && pnpm install && pnpm tauri dev
 
 # Android
-pnpm tauri android init  # first time
+cd wt-1-tauri-shell && pnpm tauri android init  # first time
 pnpm tauri android dev
 
 # Each Rust crate

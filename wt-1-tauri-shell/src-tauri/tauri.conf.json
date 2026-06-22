@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.afstudy20.ytb",
   "build": {
-    "beforeDevCommand": "pnpm dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
-    "frontendDist": "../dist"
+    "beforeDevCommand": "cd ../wt-2-ui && pnpm dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "cd ../wt-2-ui && pnpm install --frozen-lockfile && pnpm build",
+    "frontendDist": "../../wt-2-ui/dist"
   },
   "app": {
     "windows": [
