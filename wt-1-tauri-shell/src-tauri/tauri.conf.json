@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.afstudy20.ytb",
   "build": {
-    "beforeDevCommand": "cd ../../wt-2-ui && pnpm dev",
+    "beforeDevCommand": "cd ../wt-2-ui && pnpm dev",
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": "cd ../../wt-2-ui && pnpm install --frozen-lockfile && pnpm build",
+    "beforeBuildCommand": "cd ../wt-2-ui && pnpm install --frozen-lockfile && pnpm build",
     "frontendDist": "../../wt-2-ui/dist"
   },
   "app": {
