@@ -64,7 +64,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             wt-1-tauri-shell/src-tauri/target
-          key: ${{ runner.os }}-cargo-android-${{ hashFiles('wt-1-tauri-shell/src-tauri/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-android-${{ hashFiles('Cargo.lock', 'wt-1-tauri-shell/src-tauri/Cargo.lock') }}
 
       - name: Install frontend
         working-directory: wt-1-tauri-shell
