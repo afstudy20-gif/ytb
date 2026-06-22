@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, MutexGuard, OnceLock};
+mod innertube_plugin;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueueItem {
@@ -126,7 +127,14 @@ pub fn run() {
             seek,
             stop,
             set_queue,
-            get_playback_state
+            get_playback_state,
+            innertube_plugin::search,
+            innertube_plugin::video,
+            innertube_plugin::streams,
+            innertube_plugin::channel,
+            innertube_plugin::playlist,
+            innertube_plugin::sponsor_block,
+            innertube_plugin::return_youtube_dislike
         ])
         .run(tauri::generate_context!())
         .expect("error while running Tauri application");

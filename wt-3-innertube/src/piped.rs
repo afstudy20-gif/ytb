@@ -222,7 +222,12 @@ fn parse_piped_response(value: &serde_json::Value) -> Result<StreamMap> {
     if let Some(arr) = value.get("videoStreams").and_then(|v| v.as_array()) {
         for v in arr {
             if let Some(s) = parse_one(v) {
-                if s.has_audio() {
+                let is_progressive = v
+                    .get("videoOnly")
+                    .and_then(|value| value.as_bool())
+                    .is_some_and(|video_only| !video_only)
+                    || s.has_audio();
+                if is_progressive {
                     progressive.push(s);
                 } else {
                     adaptive_video.push(s);
@@ -260,8 +265,8 @@ mod tests {
     fn parse_piped_response_maps_video_and_audio_streams() {
         let resp = json!({
             "videoStreams": [
-                {"url": "https://cdn/v", "mimeType": "video/mp4", "itag": 137, "height": 1080, "bitrate": 5000000},
-                {"url": "https://cdn/p", "mimeType": "video/mp4", "itag": 18, "width": 640, "height": 360, "audioSampleRate": 44100}
+                {"url": "https://cdn/v", "mimeType": "video/mp4", "itag": 137, "height": 1080, "bitrate": 5000000, "videoOnly": true},
+                {"url": "https://cdn/p", "mimeType": "video/mp4", "itag": 18, "width": 640, "height": 360, "videoOnly": false}
             ],
             "audioStreams": [
                 {"url": "https://cdn/a", "mimeType": "audio/webm", "itag": 251, "bitrate": 160000, "audioSampleRate": 44100}

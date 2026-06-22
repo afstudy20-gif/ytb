@@ -7,7 +7,7 @@
     "beforeDevCommand": "cd ../wt-2-ui && pnpm dev",
     "devUrl": "http://localhost:5173",
     "beforeBuildCommand": "cd ../wt-2-ui && pnpm install --frozen-lockfile && pnpm build",
-    "frontendDist": "../../wt-2-ui/dist"
+    "frontendDist": "../wt-2-ui/dist"
   },
   "app": {
     "windows": [

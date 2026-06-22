@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "wt-1-tauri-shell/src-tauri",
+    "wt-3-innertube",
+]
+resolver = "2"

@@ -13,6 +13,7 @@ Personal YouTube client for Android (Tauri v2) + web. Background audio playback,
 | `wt-3-innertube/` | Rust crate — InnerTube API client (search/streams/cipher) + Piped fallback |
 | `wt-4-downloader/` | Rust crate — segmented downloader + ffmpeg muxer + persistent queue |
 | `wt-5-extras/` | SponsorBlock + RYD clients (Rust + TS) + PWA service worker |
+| `wt-6-backend/` | Axum HTTP API for the web UI, deployable on Coolify/Hetzner |
 
 ## Build
 
@@ -27,6 +28,9 @@ pnpm tauri android dev
 
 # Each Rust crate
 cd wt-3-innertube && cargo check
+
+# Backend API for real UI data/streams
+cd wt-6-backend && cargo run
 ```
 
 ## Release
