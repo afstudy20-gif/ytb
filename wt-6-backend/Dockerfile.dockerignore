@@ -1,0 +1,9 @@
+**
+!wt-3-innertube/
+!wt-3-innertube/**
+!wt-6-backend/
+!wt-6-backend/**
+wt-3-innertube/target
+wt-6-backend/target
+**/.git
+**/node_modules

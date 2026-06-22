@@ -1,0 +1,6 @@
+target
+**/target
+.git
+.github
+node_modules
+**/node_modules

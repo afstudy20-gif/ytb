@@ -1,5 +1,5 @@
-use innertube::InnerTube;
-use innertube::SearchItem;
+use innertube::{InnerTube, SearchItem};
+use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -88,25 +88,32 @@ pub struct RYDResponse {
     pub dislikes: u64,
 }
 
+fn tube() -> &'static InnerTube {
+    static TUBE: OnceCell<InnerTube> = OnceCell::new();
+    TUBE.get_or_init(|| {
+        InnerTube::with_piped_fallback(vec![
+            "https://pipedapi.kavin.rocks".to_string(),
+            "https://pipedapi.adminforge.de".to_string(),
+        ])
+    })
+}
+
 #[tauri::command]
 pub async fn search(args: SearchArgs) -> Result<SearchResult, String> {
-    let tube = InnerTube::new();
-    let results = tube.search(&args.query, None).await.map_err(|e| e.to_string())?;
+    let results = tube().search(&args.query, None).await.map_err(|e| format!("search: {e}"))?;
     
     let items: Vec<SearchResultItem> = results
         .items
         .into_iter()
         .take(20)
-        .filter_map(|item| {
-            match item {
-                SearchItem::Video(v) => Some(SearchResultItem {
-                    id: v.id,
-                    title: v.title,
-                    thumbnail: v.thumbnail_url.unwrap_or_default(),
-                    author: v.author,
-                }),
-                _ => None,
-            }
+        .filter_map(|item| match item {
+            SearchItem::Video(v) => Some(SearchResultItem {
+                id: v.id,
+                title: v.title,
+                thumbnail: v.thumbnail_url.unwrap_or_default(),
+                author: v.author,
+            }),
+            _ => None,
         })
         .collect();
     
@@ -115,8 +122,7 @@ pub async fn search(args: SearchArgs) -> Result<SearchResult, String> {
 
 #[tauri::command]
 pub async fn video(args: VideoIdArgs) -> Result<VideoDetail, String> {
-    let tube = InnerTube::new();
-    let details = tube.video(&args.id).await.map_err(|e| e.to_string())?;
+    let details = tube().video(&args.id).await.map_err(|e| format!("video: {e}"))?;
     
     Ok(VideoDetail {
         id: details.id,
@@ -133,8 +139,7 @@ pub async fn video(args: VideoIdArgs) -> Result<VideoDetail, String> {
 
 #[tauri::command]
 pub async fn streams(args: VideoIdArgs) -> Result<StreamMap, String> {
-    let tube = InnerTube::new();
-    let map = tube.streams(&args.id).await.map_err(|e| e.to_string())?;
+    let map = tube().streams(&args.id).await.map_err(|e| format!("streams: {e}"))?;
     
     let to_stream = |s: innertube::Stream| -> Stream {
         Stream {
@@ -158,8 +163,7 @@ pub async fn streams(args: VideoIdArgs) -> Result<StreamMap, String> {
 
 #[tauri::command]
 pub async fn channel(args: VideoIdArgs) -> Result<ChannelDetail, String> {
-    let tube = InnerTube::new();
-    let details = tube.channel(&args.id).await.map_err(|e| e.to_string())?;
+    let details = tube().channel(&args.id).await.map_err(|e| format!("channel: {e}"))?;
     
     Ok(ChannelDetail {
         id: details.id,
@@ -172,8 +176,7 @@ pub async fn channel(args: VideoIdArgs) -> Result<ChannelDetail, String> {
 
 #[tauri::command]
 pub async fn playlist(args: VideoIdArgs) -> Result<PlaylistDetail, String> {
-    let tube = InnerTube::new();
-    let details = tube.playlist(&args.id).await.map_err(|e| e.to_string())?;
+    let details = tube().playlist(&args.id).await.map_err(|e| format!("playlist: {e}"))?;
     
     Ok(PlaylistDetail {
         id: details.id,

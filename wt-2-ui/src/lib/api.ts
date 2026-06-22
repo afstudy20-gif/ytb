@@ -275,12 +275,9 @@ class TauriClient implements YtClient {
 }
 
 async function invoke<T>(cmd: string, args: Record<string, unknown>): Promise<T> {
-  try {
-    const { invoke: tauriInvoke } = await import('@tauri-apps/api/core')
-    return await tauriInvoke<T>(cmd, args)
-  } catch {
-    throw new Error(`Tauri invoke failed: ${cmd}`)
-  }
+  const { invoke: tauriInvoke } = await import('@tauri-apps/api/core')
+  const result = await tauriInvoke<T>(cmd, args)
+  return result
 }
 
 export const client: YtClient = new TauriClient()
